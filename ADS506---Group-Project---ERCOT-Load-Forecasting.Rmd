@@ -47,9 +47,11 @@ sum(is.na(load_4_year))
 #Remove NA's which arise due to issues with daylight savings (1 record in each year)
 load_4_year <- na.omit(load_4_year)
 
+## Melt plot so there is a single value column
+load_4_year_melt <- melt(load_4_year, na.rm = FALSE, value.name = 'Load', id = 'HourEnding')
 
 ## Converting to a time series
-ts_load <- xts(load_4_year, load_4_year$HourEnding)
+ts_load <- xts(load_4_year_melt, load_4_year_melt$HourEnding)
 ```
 
 
@@ -64,37 +66,19 @@ ts_load <- xts(load_4_year, load_4_year$HourEnding)
 
 plot_data = function(df, title){
   
-  plot_melt = melt(df, na.rm = FALSE, value.name = 'Load', id = 'HourEnding')
-  names(plot_melt)[2] <- "Region"
-
-  plt = ggplot(data = plot_melt, mapping = aes(x=HourEnding, y=Load, colour = Region)) +
-  geom_line(size = 0.1, alpha=0.4) +
+  plt = ggplot(mapping = aes(x=HourEnding, y=value, colour = variable)) +
+  geom_line(data = df, size = 0.1) +
   ggdark::dark_mode() + 
   theme(legend.position = 'bottom', ) + 
   ggtitle('ERCOT Actual Power Load by Region - Raw Data') +
   theme(plot.title = element_text(hjust = 0.5)) +
   ylab("Electrical Load (MW)") +
-  xlab("Hour Ending") +
-  theme(panel.grid.major = element_blank()) +
-  guides(shape = guide_legend(override.aes = list(size = 1)),
-               color = guide_legend(override.aes = list(size = 1))) +
-  theme(legend.title = element_text(size = 8), 
-              legend.text  = element_text(size = 8),
-              legend.key.size = unit(1, "lines"))
+  xlab("Hour Ending")
     
   return(plt)}
 
 plot_data(load_4_year, 'ERCOT Actual Power Load by Region - Raw Data')
+
 ```
 
-```{r standardization}
-library(dplyr)
-
-### So basically all we need to do now, make the transformation to load_4_year, and pass to the function with a new title!
-
-std = load_4_year %>%
-  mutate_if(is.numeric, scale)
-
-plot_data(std, 'ERCOT Actual Power Load by Region - Standardized')
-```
 
