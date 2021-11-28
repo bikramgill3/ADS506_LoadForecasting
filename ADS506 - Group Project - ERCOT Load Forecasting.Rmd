@@ -1,0 +1,86 @@
+---
+title: "ADS506 - Group Project - ERCOT Load Forecasting"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(astsa)
+library(ggplot2)
+library(readxl)
+library(tidyverse)
+library(ggdark)
+```
+
+
+####### Need to add Travis' Comments in for these code blocks! #################
+
+
+```{r dataload}
+load17.df <- read_excel('Native_Load_2017.xlsx')
+load18.df <- read_excel('Native_Load_2018.xlsx')
+load19.df <- read_excel('Native_Load_2019.xlsx')
+load20.df <- read_excel('Native_Load_2020.xlsx')
+load21.df <- read_excel('Native_Load_2021.xlsx')
+```
+
+
+```{r dataprep}
+## The load dataset for 2017 had a space in the Timestamp column, preventing the binding of the four years
+colnames(load17.df)[1] <- "HourEnding"
+
+## Using bind_rows from tidyverse, I merged 2017-2020
+load_4_year <- bind_rows(load17.df,load18.df,load19.df,load20.df)
+sum(is.na(load_4_year))
+
+
+## Using strptime, I converted the time column to a date variable
+load_4_year$HourEnding <- as.POSIXct(strptime(load_4_year$HourEnding, format="%m/%d/%Y %H:%M"))
+
+#load_4_year$HourEnding <- as.Date(load_4_year$HourEnding, format="%m/%d/%Y %H:%M") ## removed this to retain hourly info for plot
+
+class(load_4_year$HourEnding)
+head(load_4_year)
+sum(is.na(load_4_year))
+
+#Remove NA's which arise due to issues with daylight savings (1 record in each year)
+load_4_year <- na.omit(load_4_year)
+
+## Converting to a time series
+ts_load <- xts(load_4_year, load_4_year$HourEnding)   ##BG: ggplot doesn't play as nicely with xts for some reason, my plots use load_4_year as the base. I applied my transformations on that (standardizations for each column in the raw df, than i passed it into the plot function
+```
+
+
+```{r plotfunction}
+
+## Define plot function
+## I used the regular load_4_year dataframe as ggplot didnt play nicely with the xts transformed series.
+## To use the function below, apply your transformations to load_4_year.df dataframe. 
+## Once you have your transformed dataframe, feed the following inputs into the function:
+
+plot_data = function(transformed_df, title){
+  plot_melt = melt(transformed_df, na.rm = FALSE, value.name = 'value', id = 'HourEnding')
+  
+  plt = ggplot(data=plot_melt, aes(x=HourEnding, y=value, colour = variable)) +
+  ggdark::dark_mode() +
+  ggtitle(title)
+  
+  
+  return(plt)}
+
+plot_data(load_4_year, 'ERCOT Actual Power Load by Region - Raw Data')
+```
+
+
+```{r test}
+
+plot_melt = melt(load_4_year, na.rm = FALSE, value.name = 'value', id = 'HourEnding')
+
+plt = ggplot(data=plot_melt, aes(x=HourEnding, y=value, colour = variable)) +
+ggdark::dark_mode() +
+ggtitle('title')
+
+plt
+
+```
+
+
