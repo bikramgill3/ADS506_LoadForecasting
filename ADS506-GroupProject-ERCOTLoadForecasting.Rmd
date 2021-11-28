@@ -57,7 +57,7 @@ ts_load <- xts(load_4_year, load_4_year$HourEnding)
 
 
 
-```{r plotfunction}
+```{r plotfunction, message=FALSE}
 
 
 ### This is a sample of what we could do in ggplot, although may look a bit ugly because of the cyclical nature of our time series (i.e. there are daily power cycles, which over 4 years and many regions doesn't come out that well)
@@ -87,7 +87,7 @@ plot_data = function(df, title){
 plot_data(load_4_year, 'ERCOT Actual Power Load by Region - Raw Data')
 ```
 
-```{r standardization}
+```{r standardization, message=FALSE}
 library(dplyr)
 
 ### So basically all we need to do now, make the transformation to load_4_year, and pass to the function with a new title!
