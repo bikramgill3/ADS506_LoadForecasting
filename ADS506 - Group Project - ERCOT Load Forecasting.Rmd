@@ -98,3 +98,8 @@ std = load_4_year %>%
 plot_data(std, 'ERCOT Actual Power Load by Region - Standardized')
 ```
 
+
+```{r}
+# Jack test
+```
+
