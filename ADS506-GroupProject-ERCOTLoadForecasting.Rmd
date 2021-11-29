@@ -50,6 +50,8 @@ load_4_year <- na.omit(load_4_year)
 
 ## Converting to a time series
 ts_load <- xts(load_4_year, load_4_year$HourEnding)
+ts_load <- ts_load[,-1]
+head(ts_load)
 ```
 
 
@@ -71,7 +73,7 @@ plot_data = function(df, title){
   geom_line(size = 0.1, alpha=0.4) +
   ggdark::dark_mode() + 
   theme(legend.position = 'bottom', ) + 
-  ggtitle('ERCOT Actual Power Load by Region - Raw Data') +
+  ggtitle('ERCOT Actual Power Load by Region - ' , title) +
   theme(plot.title = element_text(hjust = 0.5)) +
   ylab("Electrical Load (MW)") +
   xlab("Hour Ending") +
@@ -84,7 +86,7 @@ plot_data = function(df, title){
     
   return(plt)}
 
-plot_data(load_4_year, 'ERCOT Actual Power Load by Region - Raw Data')
+plot_data(load_4_year, 'Raw Data')
 ```
 
 ```{r standardization, message=FALSE}
@@ -95,7 +97,7 @@ library(dplyr)
 std = load_4_year %>%
   mutate_if(is.numeric, scale)
 
-plot_data(std, 'ERCOT Actual Power Load by Region - Standardized')
+plot_data(std, 'Standardized')
 ```
 
 
@@ -115,6 +117,45 @@ tsplot(dload, main="ERCOT Actual Power Load by Region")
 
 
 ```{r}
-# Jack test
+# Jack Box-cox transformation
+
+library(EnvStats)
+
+set.seed(250) 
+
+dev.new()
+qqPlot(boxcoxTransform(load_4_year$ERCOT, lambda = 0.5), add.line = TRUE) 
+
+dev.new()
+qqPlot(boxcoxTransform(load_4_year$ERCOT, lambda = 0), add.line = TRUE)
+
+dev.new()
+qqPlot(boxcoxTransform(as.numeric(ts_load$ERCOT), lambda = 0.5), add.line = TRUE)
+
+dev.new()
+qqPlot(boxcoxTransform(as.numeric(ts_load$HourEnding), lambda = 0), add.line = TRUE)
+
+dev.new()
+qqPlot(boxcoxTransform(as.numeric(ts_load$HourEnding), lambda = 0.5), add.line = TRUE)
 ```
+
+```{r Normalization, message=FALSE}
+## Building out the min/max scaler to normalize the data as a function
+normalize <- function(x) {
+ (x-min(x))/(max(x)-min(x))
+}
+
+## Removing the POSIXlt column to normalize
+loadnorm <- (load_4_year[,-1])
+
+## Running the new DF through the normalization function
+loadnorm <- normalize(loadnorm)
+
+## Adding the POSIXlt column back on
+loadnorm["HourEnding"] <- load_4_year$HourEnding
+
+## Plotting the data
+plot_data(loadnorm, "Normalized (Min/Max")
+```
+It is clear that a min max normalization scalar is not a usable option as it does not account for the mean. The graph is still visually the same.
 
