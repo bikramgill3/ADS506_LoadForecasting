@@ -99,6 +99,21 @@ plot_data(std, 'ERCOT Actual Power Load by Region - Standardized')
 ```
 
 
+```{r differencing, message=FALSE}
+### Applying differencing and detrending to remove seasonality and make data stationary:
+
+df2 = as.numeric(as.character(unlist(load_4_year)))
+
+### Applying a single differencing:
+dload = diff(df2, lag = 2, differences = 1 )
+
+fit = lm(load_4_year, na.action=NULL) # the regression
+par(mfrow=c(2,1)) # plot transformed data
+tsplot(resid(fit), main="Detrended ERCOT Actual Power Load by Region")
+tsplot(dload, main="ERCOT Actual Power Load by Region")
+```
+
+
 ```{r}
 # Jack test
 ```
