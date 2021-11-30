@@ -135,8 +135,10 @@ loadbox = boxcoxTransform(df3, lambda = 0)
 
 library(astsa)
 
+loadbox["HourEnding"] = load_4_year$HourEnding
+
 #** Where I am getting an error
-#par(mfrow=c(2,1))
+par(mfrow=c(2,1))
 tsplot(loadbox, "Box Cox Transformed")
 
 ```
