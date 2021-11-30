@@ -117,26 +117,40 @@ tsplot(dload, main="ERCOT Actual Power Load by Region")
 
 
 ```{r}
-# Jack Box-cox transformation
 
 library(EnvStats)
 
 set.seed(250) 
 
-dev.new()
-qqPlot(boxcoxTransform(load_4_year$ERCOT, lambda = 0.5), add.line = TRUE) 
+
+# Beginning by removing the date column
+df3 = (load_4_year[,-1])
+
+df3 = as.numeric(as.character(unlist(df3)))
+
+# Now to transform the new dataframe with the box cox transformation
+loadbox = boxcoxTransform(df3, lambda = 0)
+
+# Now to plot our bos cox transformed data:
+
+library(astsa)
+
+#** Where I am getting an error
+#par(mfrow=c(2,1))
+tsplot(loadbox, "Box Cox Transformed")
+
+```
+
+```{r}
+# Other box cox work that displays a graph but no idea if it is right or not
+
+df3 = (load_4_year[,-1])
+df3 = as.numeric(as.character(unlist(df3)))
 
 dev.new()
-qqPlot(boxcoxTransform(load_4_year$ERCOT, lambda = 0), add.line = TRUE)
+qqPlot(boxcoxTransform(df3, lambda = 0.5), add.line = TRUE)
 
-dev.new()
-qqPlot(boxcoxTransform(as.numeric(ts_load$ERCOT), lambda = 0.5), add.line = TRUE)
 
-dev.new()
-qqPlot(boxcoxTransform(as.numeric(ts_load$HourEnding), lambda = 0), add.line = TRUE)
-
-dev.new()
-qqPlot(boxcoxTransform(as.numeric(ts_load$HourEnding), lambda = 0.5), add.line = TRUE)
 ```
 
 ```{r Normalization, message=FALSE}
