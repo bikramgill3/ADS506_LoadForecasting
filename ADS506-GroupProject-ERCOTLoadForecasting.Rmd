@@ -1,6 +1,8 @@
 ---
 title: "ADS506 - Group Project - ERCOT Load Forecasting"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -11,10 +13,15 @@ library(tidyverse)
 library(ggdark)
 library(reshape2) 
 library(xts)
+library(dplyr)
+library(EnvStats)
 ```
 
+Please see code blocks below which have been used to load, prep, transform and plot our data.
 
-####### Need to add Travis' Comments in for these code blocks! #################
+This will serve as our initial pre-processing, which we can further analyze for our modelling phase and our paper.
+
+Further analysis will also be performed as we dive deeper into our paper and final code. 
 
 
 ```{r dataload}
@@ -30,23 +37,16 @@ load21.df <- read_excel('Native_Load_2021.xlsx')
 ## The load dataset for 2017 had a space in the Timestamp column, preventing the binding of the four years
 colnames(load17.df)[1] <- "HourEnding"
 
-## Using bind_rows from tidyverse, I merged 2017-2020
+## Using bind_rows from tidyverse, the data from 2017-2020 was merged.
 load_4_year <- bind_rows(load17.df,load18.df,load19.df,load20.df)
 sum(is.na(load_4_year))
 
 
-## Using strptime, I converted the time column to a date variable
+## Using strptime, the time variable data type was set. 
 load_4_year$HourEnding <- as.POSIXct(strptime(load_4_year$HourEnding, format="%m/%d/%Y %H:%M"))
-
-#load_4_year$HourEnding <- as.Date(load_4_year$HourEnding, format="%m/%d/%Y %H:%M") ## removed this to retain hourly info for plot
-
-class(load_4_year$HourEnding)
-head(load_4_year)
-sum(is.na(load_4_year))
 
 #Remove NA's which arise due to issues with daylight savings (1 record in each year)
 load_4_year <- na.omit(load_4_year)
-
 
 ## Converting to a time series
 ts_load <- xts(load_4_year, load_4_year$HourEnding)
@@ -60,9 +60,7 @@ head(ts_load)
 
 
 ```{r plotfunction, message=FALSE}
-
-
-### This is a sample of what we could do in ggplot, although may look a bit ugly because of the cyclical nature of our time series (i.e. there are daily power cycles, which over 4 years and many regions doesn't come out that well)
+## A function has been created to plot data once appropriate transformations have been made. 
 
 plot_data = function(df, title){
   
@@ -73,7 +71,7 @@ plot_data = function(df, title){
   geom_line(size = 0.1, alpha=0.4) +
   ggdark::dark_mode() + 
   theme(legend.position = 'bottom', ) + 
-  ggtitle('ERCOT Actual Power Load by Region - ' , title) +
+  ggtitle(paste('ERCOT Actual Power Load by Region - ' , title)) +
   theme(plot.title = element_text(hjust = 0.5)) +
   ylab("Electrical Load (MW)") +
   xlab("Hour Ending") +
@@ -89,10 +87,7 @@ plot_data = function(df, title){
 plot_data(load_4_year, 'Raw Data')
 ```
 
-```{r standardization, message=FALSE}
-library(dplyr)
-
-### So basically all we need to do now, make the transformation to load_4_year, and pass to the function with a new title!
+```{r standardization, message=FALSE, warning=FALSE}
 
 std = load_4_year %>%
   mutate_if(is.numeric, scale)
@@ -101,59 +96,15 @@ plot_data(std, 'Standardized')
 ```
 
 
-```{r differencing, message=FALSE}
-### Applying differencing and detrending to remove seasonality and make data stationary:
+```{r differencing, message=FALSE, warning=FALSE}
+## Applying differencing and detrending to remove seasonality and make data stationary
 
-df2 = as.numeric(as.character(unlist(load_4_year)))
+dload <- data.frame(lapply(load_4_year[,-1], diff))
+dload["HourEnding"] <- load_4_year$HourEnding[2:35060]
 
-### Applying a single differencing:
-dload = diff(df2, lag = 2, differences = 1 )
-
-fit = lm(load_4_year, na.action=NULL) # the regression
-par(mfrow=c(2,1)) # plot transformed data
-tsplot(resid(fit), main="Detrended ERCOT Actual Power Load by Region")
-tsplot(dload, main="ERCOT Actual Power Load by Region")
+plot_data(dload, 'Differenced')
 ```
 
-
-```{r}
-
-library(EnvStats)
-
-set.seed(250) 
-
-
-# Beginning by removing the date column
-df3 = (load_4_year[,-1])
-
-df3 = as.numeric(as.character(unlist(df3)))
-
-# Now to transform the new dataframe with the box cox transformation
-loadbox = boxcoxTransform(df3, lambda = 0)
-
-# Now to plot our bos cox transformed data:
-
-library(astsa)
-
-loadbox["HourEnding"] = load_4_year$HourEnding
-
-#** Where I am getting an error
-par(mfrow=c(2,1))
-tsplot(loadbox, "Box Cox Transformed")
-
-```
-
-```{r}
-# Other box cox work that displays a graph but no idea if it is right or not
-
-df3 = (load_4_year[,-1])
-df3 = as.numeric(as.character(unlist(df3)))
-
-dev.new()
-qqPlot(boxcoxTransform(df3, lambda = 0.5), add.line = TRUE)
-
-
-```
 
 ```{r Normalization, message=FALSE}
 ## Building out the min/max scaler to normalize the data as a function
@@ -171,7 +122,9 @@ loadnorm <- normalize(loadnorm)
 loadnorm["HourEnding"] <- load_4_year$HourEnding
 
 ## Plotting the data
-plot_data(loadnorm, "Normalized (Min/Max")
+plot_data(loadnorm, "Normalized (Min/Max)")
 ```
+
+
 It is clear that a min max normalization scalar is not a usable option as it does not account for the mean. The graph is still visually the same.
 
