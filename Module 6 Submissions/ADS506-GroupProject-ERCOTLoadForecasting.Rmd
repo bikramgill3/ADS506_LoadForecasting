@@ -15,6 +15,7 @@ library(reshape2)
 library(xts)
 library(dplyr)
 library(EnvStats)
+library(forecast)
 ```
 
 Please see code blocks below which have been used to load, prep, transform and plot our data.
@@ -67,14 +68,42 @@ It is clear that a min max normalization scalar is not a usable option as it doe
 ##### Bikram: notes here; im going to plot the P/ACF's, which should show if we need to difference, AR(x) and MA(x).
 
 ### From there, will fit the ARIMA model, forecast 2021 and then plot the dataset vs forecast
+library(ggplot2)
+library(ggfortify)
+
+# cbind("Raw Data" = load_4_year$ERCOT,
+#       "Logs" = log(load_4_year$ERCOT),
+#       "Seasonally\n differenced logs" =
+#         diff(log(load_4_year$ERCOT),24),
+#       "Doubly\n differenced logs" =
+#         diff(diff(log(load_4_year$ERCOT),24),1)) %>%
+#   autoplot(facets=TRUE) +
+#     xlab("Year") + ylab("") +
+#     ggtitle("Monthly US net electricity generation")
 
 
+par(mfrow = c(4,1)) 
+acf2(load_4_year$ERCOT, main = "Raw Data")
+acf2(diff(load_4_year$ERCOT), main = "First-Order Difference")
+acf2(diff(diff(load_4_year$ERCOT)), main = "Second-Order Difference")
+acf2(diff(log(load_4_year$ERCOT),24), main = "Seasonally differenced logs")
 
-## Plot P/ACF of raw data
+### We see clear cyclicality in the raw data, first-order difference and second order difference. 
+### When observing the differences, the trend can be seen around lag 24, indiciating this is a daily autocorrelatioj (e.g. power demand at any given hour today will be highly correlated to the demand at the same time 24, 48, 72 hours ago etc.)
 
+## Seasonally differencing produces a series that can be modelled.
+### Based on the seasonally differenced P/ACF, the ACF tails off while the P/ACF cuts off. This indicates an AR(p) model. 
 
+```
+```{r bg_arima2}
 
-## Plot P/ACF of differenced data
+### Overall, our model is the following:
+
+### AR(24), Differenced(24), annd logged
+
+log_load <- na.omit(log(load_4_year$ERCOT))
+
+fit <- Arima(log_load, order=c(24,24,0))  ## getting an error on the fit
 
 ```
 
