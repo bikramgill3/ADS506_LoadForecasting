@@ -41,6 +41,9 @@ colnames(load17.df)[1] <- "HourEnding"
 load_4_year <- bind_rows(load17.df,load18.df,load19.df,load20.df)
 sum(is.na(load_4_year))
 
+load_4_year <- load_4_year 
+
+
 
 ## Using strptime, the time variable data type was set. 
 load_4_year$HourEnding <- as.POSIXct(strptime(load_4_year$HourEnding, format="%m/%d/%Y %H:%M"))
@@ -127,4 +130,5 @@ plot_data(loadnorm, "Normalized (Min/Max)")
 
 
 It is clear that a min max normalization scalar is not a usable option as it does not account for the mean. The graph is still visually the same.
+
 

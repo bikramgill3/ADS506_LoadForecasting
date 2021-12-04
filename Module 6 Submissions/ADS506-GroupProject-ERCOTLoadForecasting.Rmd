@@ -1,0 +1,81 @@
+---
+title: "ADS506 - Group Project - ERCOT Load Forecasting"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(astsa)
+library(ggplot2)
+library(readxl)
+library(tidyverse)
+library(ggdark)
+library(reshape2) 
+library(xts)
+library(dplyr)
+library(EnvStats)
+```
+
+Please see code blocks below which have been used to load, prep, transform and plot our data.
+
+This will serve as our initial pre-processing, which we can further analyze for our modelling phase and our paper.
+
+Further analysis will also be performed as we dive deeper into our paper and final code. 
+
+
+```{r dataload}
+load17.df <- read_excel('Native_Load_2017.xlsx')
+load18.df <- read_excel('Native_Load_2018.xlsx')
+load19.df <- read_excel('Native_Load_2019.xlsx')
+load20.df <- read_excel('Native_Load_2020.xlsx')
+load21.df <- read_excel('Native_Load_2021.xlsx')
+```
+
+
+```{r dataprep}
+## The load dataset for 2017 had a space in the Timestamp column, preventing the binding of the four years
+colnames(load17.df)[1] <- "HourEnding"
+
+## Using bind_rows from tidyverse, the data from 2017-2020 was merged.
+load_4_year <- bind_rows(load17.df,load18.df,load19.df,load20.df)
+sum(is.na(load_4_year))
+
+load_4_year <- load_4_year[c("HourEnding","ERCOT")]
+
+
+
+## Using strptime, the time variable data type was set. 
+load_4_year$HourEnding <- as.POSIXct(strptime(load_4_year$HourEnding, format="%m/%d/%Y %H:%M"))
+
+#Remove NA's which arise due to issues with daylight savings (1 record in each year)
+load_4_year <- na.omit(load_4_year)
+
+## Converting to a time series
+ts_load <- xts(load_4_year, load_4_year$HourEnding)
+ts_load <- ts_load[,-1]
+head(ts_load)
+```
+
+
+
+It is clear that a min max normalization scalar is not a usable option as it does not account for the mean. The graph is still visually the same.
+
+
+```{r bg_arima}
+
+##### Bikram: notes here; im going to plot the P/ACF's, which should show if we need to difference, AR(x) and MA(x).
+
+### From there, will fit the ARIMA model, forecast 2021 and then plot the dataset vs forecast
+
+
+
+## Plot P/ACF of raw data
+
+
+
+## Plot P/ACF of differenced data
+
+```
+
+
