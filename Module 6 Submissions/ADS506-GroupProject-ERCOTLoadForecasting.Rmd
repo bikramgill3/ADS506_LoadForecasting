@@ -16,6 +16,7 @@ library(xts)
 library(dplyr)
 library(EnvStats)
 library(forecast)
+library(rugarch)
 ```
 
 Please see code blocks below which have been used to load, prep, transform and plot our data.
@@ -95,6 +96,7 @@ acf2(diff(log(load_4_year$ERCOT),24), main = "Seasonally differenced logs")
 ### Based on the seasonally differenced P/ACF, the ACF tails off while the P/ACF cuts off. This indicates an AR(p) model. 
 
 ```
+
 ```{r bg_arima2}
 
 ### Overall, our model is the following:
@@ -107,4 +109,21 @@ fit <- Arima(log_load, order=c(24,24,0))  ## getting an error on the fit
 
 ```
 
+```{r GARCH Model}
+
+# Model specification of a GARCH constant model
+garchSpec = ugarchspec(
+           variance.model=list(model="sGARCH",
+                               garchOrder=c(1,1)),
+           mean.model=list(arimaorder=c(24,24,0)), 
+           distribution.model="std")
+
+# Fitting the model
+garchFit = ugarchfit(spec=garchSpec, data=log_load, out.sample = 20)
+garchFit
+
+
+# Plot the different useful graphs for the model estimation
+plot(garchFit, which="all")
+```
 
