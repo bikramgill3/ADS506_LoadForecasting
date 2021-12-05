@@ -6,6 +6,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+
 library(astsa)
 library(ggplot2)
 library(readxl)
@@ -64,6 +65,8 @@ head(ts_load)
 It is clear that a min max normalization scalar is not a usable option as it does not account for the mean. The graph is still visually the same.
 
 
+
+
 ```{r bg_arima}
 
 ##### Bikram: notes here; im going to plot the P/ACF's, which should show if we need to difference, AR(x) and MA(x).
@@ -71,17 +74,6 @@ It is clear that a min max normalization scalar is not a usable option as it doe
 ### From there, will fit the ARIMA model, forecast 2021 and then plot the dataset vs forecast
 library(ggplot2)
 library(ggfortify)
-
-# cbind("Raw Data" = load_4_year$ERCOT,
-#       "Logs" = log(load_4_year$ERCOT),
-#       "Seasonally\n differenced logs" =
-#         diff(log(load_4_year$ERCOT),24),
-#       "Doubly\n differenced logs" =
-#         diff(diff(log(load_4_year$ERCOT),24),1)) %>%
-#   autoplot(facets=TRUE) +
-#     xlab("Year") + ylab("") +
-#     ggtitle("Monthly US net electricity generation")
-
 
 par(mfrow = c(4,1)) 
 acf2(load_4_year$ERCOT, main = "Raw Data")
@@ -95,19 +87,32 @@ acf2(diff(log(load_4_year$ERCOT),24), main = "Seasonally differenced logs")
 ## Seasonally differencing produces a series that can be modelled.
 ### Based on the seasonally differenced P/ACF, the ACF tails off while the P/ACF cuts off. This indicates an AR(p) model. 
 
+log_load <- log(load_4_year$ERCOT)
+
 ```
+
+
+
+
 
 ```{r bg_arima2}
 
-### Overall, our model is the following:
+### Fit ARIMA Model
 
-### AR(24), Differenced(24), annd logged
+bg_arima <- arima(log_load, order = c(24, 0, 0))
+bg_arima
 
-log_load <- na.omit(log(load_4_year$ERCOT))
+bg_forecast <- forecast(bg_arima, 60, level = c(.95))
+bg_forecast
 
-fit <- Arima(log_load, order=c(24,24,0))  ## getting an error on the fit
+
+# Plotting my forecasted loads
+plot(bg_forecast, type = "p", xlim= c(35000, 35120))
 
 ```
+
+
+
 
 ```{r GARCH Model}
 
@@ -138,6 +143,11 @@ plot(garchFit, which="all")
 
 
 *The last table is yet another interesting one to check (refer to "Adjusted Pearson Goodness of Fit"), it measures the goodness of fit of the error. The null hypothesis says that the conditional error term follows a normal distribution. If the p-value is lower than 5%, the null hypothesis is rejected. Our results show three of the p-value higher than 5% and one lower.*
+
+
+
+
+
 
 
 ```{r ARMA model}
