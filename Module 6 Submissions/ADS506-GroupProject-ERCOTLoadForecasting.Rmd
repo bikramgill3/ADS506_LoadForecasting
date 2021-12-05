@@ -127,3 +127,20 @@ garchFit
 plot(garchFit, which="all")
 ```
 
+***Model Comments and Findings***
+
+*The first table on the first part of the estimation results (Refer to "Optimal parameters" table) shows the optimal estimated parameters. Which means the significance of the estimated parameter.* 
+
+*The second table (refer to "Information criteria"). Shows the Akaike (AIC), Bayes (BIC), Shibata and Hannan-Quinn criteria for the model estimation. Basically the lower these values, the better the model is in terms of fitting. And we can see the results we have are in the (-4) range, which is good.*
+
+
+*The third table presents the Ljung-Box test for testing the serial correlation of the error terms. The null hypothesis states there is no serial correlation of the error terms. Basically, if the p-value is lower than 5%, the null hypothesis is rejected. Our results show that our p-value is higher than 5% on the on "Standardized Squared Residuals", meaning that there is no serial correlation of the error term.*
+
+
+*The last table is yet another interesting one to check (refer to "Adjusted Pearson Goodness of Fit"), it measures the goodness of fit of the error. The null hypothesis says that the conditional error term follows a normal distribution. If the p-value is lower than 5%, the null hypothesis is rejected. Our results show three of the p-value higher than 5% and one lower.*
+
+
+```{r}
+
+```
+
