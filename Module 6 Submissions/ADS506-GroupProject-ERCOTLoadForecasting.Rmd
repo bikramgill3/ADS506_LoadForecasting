@@ -140,7 +140,92 @@ plot(garchFit, which="all")
 *The last table is yet another interesting one to check (refer to "Adjusted Pearson Goodness of Fit"), it measures the goodness of fit of the error. The null hypothesis says that the conditional error term follows a normal distribution. If the p-value is lower than 5%, the null hypothesis is rejected. Our results show three of the p-value higher than 5% and one lower.*
 
 
-```{r}
+```{r ARMA model}
 
+#Fitting the AR Model to log_load
+
+AR <- arima(log_load, order = c(1,0,0))
+print(AR)
+
+ts.plot(load_4_year$ERCOT)
+AR_fit <- load_4_year$ERCOT - residuals(AR)
+AR_fit2 <- log_load - residuals(AR)
+plot(AR_fit2, type = "p", col = 4, lty = 2, xlim= c(35000, 35120))
+
+#Using predict() to make a 1-step forecast
+predict_AR <- predict(AR)
+
+#Obtaining the 1-step forecast using $pred[1]
+predict_AR$pred[1]
+
+#ALternatively Using predict to make 1-step through 60-step forecasts
+predict(AR, n.ahead = 60)
+
+plot(load_4_year)
+AR_forecast <- predict(AR, n.ahead = 60)$pred
+AR_forecast_se <- predict(AR, n.ahead = 60)$se
+plot(log_load)
+points(AR_forecast, type = "l", col = 2) # running into an error in plotting the follow on forecasted values
+points(AR_forecast - 2*AR_forecast_se, type = "l", col = 2, lty = 2)
+points(AR_forecast + 2*AR_forecast_se, type = "l", col = 2, lty = 2)
+
+#Fitting the MA model to log_load
+MA <- arima(log_load, order = c(0,0,1))
+print(MA)
+
+MA_fit <- log_load - resid(MA)
+plot(MA_fit, type = "p", col = 2, lty = 2, xlim= c(35000, 35120))
+
+#Making a 1-step forecast based on MA
+predict_MA <- predict(MA)
+
+#Obtaining the 1-step forecast using $pred[1]
+predict_MA$pred[1]
+
+#Alternately Making a 1-step through 60-step forecast based on MA
+predict(MA,n.ahead=60)
+
+MA_forecast <- predict(MA, n.ahead = 60)$pred
+MA_forecast_se <- predict(MA, n.ahead = 60)$se
+plot(log_load)
+
+plot(MA_forecast, type = "p", col = 2) # running into an error in plotting the follow on forecasted values
+points(AR_forecast - 2*AR_forecast_se, type = "l", col = 2, lty = 2)
+points(AR_forecast + 2*AR_forecast_se, type = "l", col = 2, lty = 2)
+
+# Find correlation between AR_fit and MA_fit
+cor(AR_fit, MA_fit)
+
+# Find AIC of AR
+AIC(AR)
+
+# Find AIC of MA
+AIC(MA)
+
+# Find BIC of AR
+BIC(AR)
+
+# Find BIC of MA
+BIC(MA)
+
+#Given the smaller value of the AIC and BIC in the MA model we should use that
 ```
+
+
+```{r ARIMA model}
+ARIMA_model1 <- auto.arima(log_load) # auto arima tries to select the best model
+
+ARIMA_model1
+
+# using forecast() to forecast the next 60 points
+# with a 95% CI
+MyARIMAForecast <- forecast(ARIMA_model1, 60, level = c(.95))
+MyARIMAForecast
+
+
+# Plotting my forecasted loads
+plot(MyARIMAForecast, type = "p", xlim= c(35000, 35120))
+```
+
+
 
