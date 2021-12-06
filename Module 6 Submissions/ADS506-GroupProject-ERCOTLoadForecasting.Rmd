@@ -129,7 +129,7 @@ garchFit
 
 
 # Plot the different useful graphs for the model estimation
-plot(garchFit, which="all")
+plot(garchFit, which= "all")
 ```
 
 ***Model Comments and Findings***
@@ -143,10 +143,6 @@ plot(garchFit, which="all")
 
 
 *The last table is yet another interesting one to check (refer to "Adjusted Pearson Goodness of Fit"), it measures the goodness of fit of the error. The null hypothesis says that the conditional error term follows a normal distribution. If the p-value is lower than 5%, the null hypothesis is rejected. Our results show three of the p-value higher than 5% and one lower.*
-
-
-
-
 
 
 
@@ -237,5 +233,22 @@ MyARIMAForecast
 plot(MyARIMAForecast, type = "p", xlim= c(35000, 35120))
 ```
 
+```{r Neural}
+load.df <- data.frame(load20.df)
+load.uni <- load.df[,-c(2:9)]
+
+n <- nrow(load.uni)
+x <- n - 240
+
+measure.df <- load.uni[x:n, ]
+
+acf2(diff(load.uni[,-1]))
+
+myts <- ts(measure.df[,-1], frequency = 24)
+fit <- nnetar(myts)
+nnetforecast <- forecast(fit, h = 24, PI = F)
+
+autoplot(nnetforecast)
+```
 
 
